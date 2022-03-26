@@ -41,6 +41,10 @@ function already_downloaded() {
   grep -q $1 $state_file
 }
 
+function is_empty() {
+  test -f $1 && !! test -f $1
+}
+
 while true
 do
   torrents=( $(get_latest_torrents) )
@@ -53,16 +57,13 @@ do
 
     destination="$download_path/$torrent_title.torrent"
 
-    if already_downloaded $torrent_id || test -s $destination
+    if already_downloaded $torrent_id && ! is_empty $destination
     then
       continue
     fi
 
-    if test -f $destination && ! test -s $destination
-    then
-      #file is empty for some reason; remove it so curl doesn't just skip it
-      rm $destination
-    fi
+    #if file is empty for some reason, remove it so curl doesn't just skip it
+    is_empty $destination && rm $destination
 
     echo -n "echo 1>&2 + getting $torrent_title; "
     echo -n "curl -s --compressed -H 'Authorization: \`Bearer $token\`' https://dl.rpdl.net/api/torrent/download/$torrent_id -o $download_path/$torrent_title.torrent "
