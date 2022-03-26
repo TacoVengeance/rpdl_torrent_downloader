@@ -26,6 +26,16 @@ function log() {
   echo $@ 1>&2
 }
 
+function require() {
+  type $1 &>/dev/null || {
+    log "ERROR: $1 not present in PATH"
+    exit 1
+  }
+}
+
+require curl
+require jq
+
 function curl_with_auth() {
   curl -H "Authorization: \`Bearer $token\`" $@
 }
