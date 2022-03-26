@@ -22,26 +22,22 @@ mkdir -p $download_path
 mkdir -p $(dirname $state_file)
 test -f $state_file || > $state_file
 
-function log()
-{
+function log() {
   echo $@ 1>&2
 }
 
-function curl_with_auth()
-{
+function curl_with_auth() {
   curl -H "Authorization: \`Bearer $token\`" $@
 }
 
-function get_latest_torrents()
-{
+function get_latest_torrents() {
   log "getting torrent list..."
 
   curl_with_auth -s "https://dl.rpdl.net/api/torrents?page_size=${page_size}&sort=uploaded_DESC" |
     jq '.data.results[] | "\(.torrent_id);\(.title)"' | tr -d '"' | sort -n
 }
 
-function already_downloaded()
-{
+function already_downloaded() {
   grep -q $1 $state_file
 }
 
@@ -68,7 +64,9 @@ do
       rm $destination
     fi
 
-    echo "echo 1>&2 + getting $torrent_title; curl -s --compressed -H 'Authorization: \`Bearer $token\`' https://dl.rpdl.net/api/torrent/download/$torrent_id -o $download_path/$torrent_title.torrent && echo $torrent_id >> $state_file"
+    echo -n "echo 1>&2 + getting $torrent_title; "
+    echo -n "curl -s --compressed -H 'Authorization: \`Bearer $token\`' https://dl.rpdl.net/api/torrent/download/$torrent_id -o $download_path/$torrent_title.torrent "
+    echo    "&& echo $torrent_id >> $state_file"
   done | xargs -n 1 -d \\n -P $parallelism sh -c
 
   log -e "\nsleeping for $wait_time_in_secs secs..."
