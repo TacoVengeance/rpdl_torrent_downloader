@@ -52,7 +52,7 @@ function already_downloaded() {
 }
 
 function is_empty() {
-  test -f $1 && !! test -f $1
+  test -f $1 && ! test -s $1
 }
 
 while true
