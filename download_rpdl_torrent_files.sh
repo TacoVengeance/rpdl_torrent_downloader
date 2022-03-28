@@ -58,8 +58,7 @@ function is_empty() {
 while true
 do
   torrents=( $(get_latest_torrents) )
-
-  test ${#torrents[@]} -eq 0 && log "no new torrents"
+  unset have_work_to_do
 
   for t in ${torrents[@]}
   do
@@ -75,12 +74,14 @@ do
     #if file is empty for some reason, remove it so curl doesn't just skip it
     is_empty $destination && rm $destination
 
+    have_work_to_do=1
+
     echo -n "echo 1>&2 + getting $torrent_title; "
     echo -n "curl -s --compressed -H 'Authorization: \`Bearer $token\`' https://dl.rpdl.net/api/torrent/download/$torrent_id -o $download_path/$torrent_title.torrent "
     echo    "&& echo $torrent_id >> $state_file"
-  done | xargs -n 1 -d \\n -P $parallelism sh -c
+  done | test -n "$have_work_to_do" && xargs -n 1 -d \\n -P $parallelism sh -c
 
-  log -e "\nsleeping for $wait_time_in_secs secs..."
+  log -e "\nall catched up; sleeping for $wait_time_in_secs secs..."
   sleep $wait_time_in_secs
 done
 
